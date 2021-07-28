@@ -8,7 +8,7 @@ class Word(models.Model):
     translate_original_word = models.CharField(max_length=255)
     transcription = models.CharField(max_length=255, default='', blank=True)
     create_date = models.DateTimeField('create_date', auto_now=True)
-    slug = models.SlugField()
+    # slug = models.SlugField()
 
     class Meta:
         ordering = ('-create_date',)
