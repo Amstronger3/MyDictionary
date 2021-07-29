@@ -5,7 +5,6 @@
     <div style="display: flex; justify-content: center">
       <v-card>
         <v-card-title>
-          <v-spacer></v-spacer>
           <v-text-field
             v-model="search"
             append-icon="mdi-magnify"
@@ -23,6 +22,7 @@
           :item-class="backgroundRow"
           item-key="id"
           :search="search"
+          dense
         >
           <template v-slot:[`item.original_word`]="{ item }">
             <div v-if="selectedWord.id === item.id && editMode">
@@ -50,16 +50,50 @@
 
       <div class="ma-2" style="display: block">
         <div>
-          <v-btn width="90" color="success" @click="addWord"> Add </v-btn>
+          <v-btn width="90" color="success" @click="addWord" v-show="!editMode">
+            Add
+          </v-btn>
         </div>
         <div class="mt-2">
-          <v-btn width="90" color="info" @click="editWord">Edit</v-btn>
+          <v-btn width="90" color="info" @click="editWord" v-show="!editMode"
+            >Edit</v-btn
+          >
         </div>
-        <div class="mt-2"><v-btn width="90" color="error">Delete</v-btn></div>
-        <div class="mt-2"><v-btn width="90" color="success">Save</v-btn></div>
-        <div class="mt-2"><v-btn width="90" color="error">Cancel</v-btn></div>
+        <div class="mt-2" v-show="!editMode">
+          <v-btn width="90" color="error" @click="deleteWord">Delete</v-btn>
+        </div>
+        <div class="mt-2" v-show="editMode">
+          <v-btn width="90" color="success" @click="saveEditableWord"
+            >Save</v-btn
+          >
+        </div>
+        <div class="mt-2" v-show="editMode">
+          <v-btn width="90" color="error" @click="cancelEditWord">Cancel</v-btn>
+        </div>
       </div>
     </div>
+
+    <v-snackbar
+      min-height="30"
+      min-width="150"
+      color="success"
+      v-model="successSnackbar"
+      :timeout="timeoutSnackbar"
+      top
+      right
+    >
+      <div style="display: flex; justify-content: center">
+        <b>Success!</b>
+      </div>
+    </v-snackbar>
+    <v-alert
+      style="position: absolute; top: 30px; left: 30px"
+      dense
+      type="warning"
+      :value="alert"
+      max-width="300"
+      >{{ alertMessage }}</v-alert
+    >
   </div>
 </template>
 
@@ -75,6 +109,10 @@ export default {
   name: "Home",
   data() {
     return {
+      alertMessage: "",
+      alert: false,
+      successSnackbar: false,
+      timeoutSnackbar: 1000,
       search: "",
       editMode: false,
       selectedWord: {},
@@ -91,7 +129,57 @@ export default {
   },
 
   methods: {
+    cancelEditWord() {
+      this.editMode = false;
+      this.getWords();
+    },
+
+    deleteWord() {
+      if (!Object.keys(this.selectedWord).length) {
+        this.alert = true;
+        this.alertMessage = "Please, select word!";
+        setTimeout(() => {
+          this.alert = false;
+        }, 2000);
+        return;
+      }
+
+      axios
+        .delete(`/api/v1/words/${this.selectedWord.id}/`)
+        .then((resp) => {
+          this.successSnackbar = true;
+          this.selectedWord = {};
+          this.editMode = false;
+          this.getWords();
+        })
+        .catch((error) => console.log(error));
+    },
+
+    saveEditableWord() {
+      axios
+        .put(`/api/v1/words/${this.selectedWord.id}/`, {
+          original_word: this.selectedWord.original_word,
+          translate_original_word: this.selectedWord.translate_original_word,
+        })
+        .then((resp) => {
+          this.successSnackbar = true;
+          this.selectedWord = {};
+          this.editMode = false;
+          this.getWords();
+        })
+        .catch((error) => console.log(error));
+    },
+
     editWord() {
+      if (!Object.keys(this.selectedWord).length) {
+        this.alert = true;
+        this.alertMessage = "Please, select word!";
+        setTimeout(() => {
+          this.alert = false;
+        }, 2000);
+        return;
+      }
+
       this.editMode = true;
     },
 

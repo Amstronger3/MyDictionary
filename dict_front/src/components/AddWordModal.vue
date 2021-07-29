@@ -1,7 +1,16 @@
 <template>
-  <v-dialog width="600" v-model="dialog">
+  <v-dialog persistent width="600" v-model="dialog">
     <v-card>
-      <v-card-title> Add word to your dictionary </v-card-title>
+      <div style="display: flex">
+        <v-card-title>
+          <span>Add word to your dictionary</span>
+        </v-card-title>
+        <v-spacer></v-spacer>
+        <v-btn text fab small @click="closeModal"
+          ><v-icon>mdi-close</v-icon></v-btn
+        >
+      </div>
+
       <v-card-text>
         <div style="display: flex; justify-content: center">
           <div>
@@ -33,7 +42,29 @@
       <v-card-actions>
         <v-btn color="success" @click="saveWord">Save</v-btn>
       </v-card-actions>
+
+      <v-snackbar
+        min-height="30"
+        min-width="150"
+        color="success"
+        v-model="successSnackbar"
+        :timeout="timeoutSnackbar"
+        top
+        right
+      >
+        <div style="display: flex; justify-content: center">
+          <b>Success!</b>
+        </div>
+      </v-snackbar>
     </v-card>
+    <v-alert
+      style="position: absolute; top: 30px; left: 30px"
+      dense
+      type="warning"
+      :value="alert"
+      max-width="300"
+      >{{ alertMessage }}</v-alert
+    >
   </v-dialog>
 </template>
 
@@ -43,15 +74,28 @@ import { eventBus } from "../main";
 export default {
   data() {
     return {
+      alertMessage: "",
+      alert: false,
+      successSnackbar: false,
+      timeoutSnackbar: 1000,
       orinalWord: "",
       translatedWord: "",
       dialog: false,
     };
   },
   methods: {
+    closeModal() {
+      this.dialog = false;
+      this.orinalWord = "";
+      this.translatedWord = "";
+    },
     saveWord() {
       if (!this.orinalWord || !this.translatedWord) {
-        alert("Please, entry words!");
+        this.alert = true;
+        this.alertMessage = "Please, enter words!";
+        setTimeout(() => {
+          this.alert = false;
+        }, 2000);
         return;
       }
 
@@ -62,6 +106,9 @@ export default {
         })
         .then((resp) => {
           eventBus.$emit("updatedWords");
+          this.successSnackbar = true;
+          this.orinalWord = "";
+          this.translatedWord = "";
         })
         .catch((error) => console.log(error));
     },
