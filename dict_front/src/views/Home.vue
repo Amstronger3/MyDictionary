@@ -6,6 +6,7 @@
       <v-card>
         <v-card-title>
           <v-text-field
+            clearable
             v-model="search"
             append-icon="mdi-magnify"
             label="Search"
