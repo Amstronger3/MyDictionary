@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  my_dictionary:
+    build: ./MyDictionary
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/MyDictionary
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  db:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=dictionary_db
+      - POSTGRES_USER=dictionary_user
+      - POSTGRES_PASSWORD=dictionary
+
+  vue-ui:
+    build: ./dict_front
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dict_front:/usr/src/app/dict_front
+      - /usr/src/app/dict_front/node_modules
